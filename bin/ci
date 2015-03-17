@@ -1,0 +1,3 @@
+#!/bin/sh -eux
+
+echo "Ha, got you, this doesn't have a build yet, but probably should."
