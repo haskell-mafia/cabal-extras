@@ -20,7 +20,7 @@ EOF
 
 fail () {
      message="${1}"
-     [ -z "$message" ] || echo message 2>&1
+     [ -z "$message" ] || echo message 1>&2
      usage 1 1>&2
 }
 
