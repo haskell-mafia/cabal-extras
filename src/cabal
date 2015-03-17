@@ -14,6 +14,7 @@ Commands:
     demo            If this project has a demo application, this builds and runs it.
     exec            If this project has an executable, this builds and runs it.
     tags            Generate tags for this project.
+    lint            Lint the project.
     init            Start a new project.
 EOF
     exit ${status}
