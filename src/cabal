@@ -1,0 +1,30 @@
+#!/bin/sh -eu
+
+usage () {
+    status=${1:-0}
+    cat <<EOF
+./cabal [command] [options]
+
+Commands:
+    build           Build this project, including all executables and test suites.
+    test            Test this project, by default this runs all test suites.
+    repl            Start the repl, by default on the the main library source.
+    quick           Start the repl directly skipping cabal, this is useful developing
+                    across multiple source trees at once.
+    demo            If this project has a demo application, this builds and runs it.
+    exec            If this project has an executable, this builds and runs it.
+    tags            Generate tags for this project.
+    lint            Lint the project.
+    init            Start a new project.
+EOF
+    exit ${status}
+}
+
+fail () {
+     message="${1}"
+     [ -z "$message" ] || echo message 1>&2
+     usage 1 1>&2
+}
+
+
+fail lolz you though this existed.
