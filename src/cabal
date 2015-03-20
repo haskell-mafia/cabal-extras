@@ -21,10 +21,140 @@ EOF
 }
 
 fail () {
-     message="${1}"
+     message="${1:-}"
      [ -z "$message" ] || echo message 1>&2
      usage 1 1>&2
 }
 
 
-fail lolz you though this existed.
+#
+# Determine the project name from the cabal file.
+#
+project_name () {
+    find . -depth 1 -name  \*.cabal -type f | xargs basename | sed -e 's/.cabal//'
+}
+
+#
+# Initialize things for a build. This can be made faster by being
+# a lot smarter about doing things conditionally, but for now,
+# brute force wins.
+#
+initialize () {
+    # submodules initialized if required, this could be conditional but no harm
+    # in just doing at this point.
+    git submodule init
+    git submodule update
+
+    # sandbox initialized if required, this should support sandboxes in parent directories
+    [ -f cabal.sandbox.config ] || {
+        cabal sandbox init
+    }
+
+    # sandbox has all sources
+    project=$(project_name)
+    [ ! -f "${project}.sandbox" ] || {
+        SANDBOX="--sandbox $(cat ${project}.sandbox)"
+    }
+    [ ! -f "$project.submodules" ] || {
+        cat $project.submodules | while read submodule; do
+            # ideally this would be conditional but yeh, stuff
+            cabal sandbox add-source ${SANDBOX:-} "$submodule"
+        done
+    }
+
+    # all dependencies installed, and configure been run?
+    cabal install -j --only-dependencies --force-reinstalls
+    cabal configure --enable-tests
+}
+
+#
+# Cabal build.
+#
+run_build () {
+    initialize
+    cabal build
+}
+
+#
+# Cabal test.
+#
+run_test () {
+    initialize
+    cabal test "$@"
+}
+
+#
+# Cabal repl.
+#
+run_repl () {
+    initialize
+    cabal repl "$@"
+}
+
+#
+# Load up the repl in "quick" mode.
+#
+run_quick () {
+    initialize
+    ghci -package-db=$(wildcard ${SANDBOX}/*-packages.conf.d) -isrc -itest test/test.hs
+}
+
+#
+# Build and run the configured demonstration executable.
+#
+run_demo () {
+    echo "Someone should really implement this."
+    exit 1
+}
+
+#
+# Build and run the configured application executable.
+#
+run_exec () {
+    echo "Someone should really implement this."
+    exit 1
+}
+
+#
+# Run hasktags on this project (building hlint if necessary).
+#
+run_tags () {
+    # should install hasktags if it doesn't exist yet.
+    hasktags -e src test main
+}
+
+#
+# Run hlint on this project (building hlint if necessary).
+#
+run_lint () {
+    # do something with hlint - need to work out best convention to build up
+    echo "Someone should really implement this."
+    exit 1
+}
+
+#
+# Initialize an empty project with a reasonable skeleton.
+#
+run_init () {
+    # make sure there is an empty directory and fill out skeleton
+    echo "Someone should really implement this."
+    exit 1
+}
+
+
+#
+# The actual start of the script.....
+#
+
+
+[ $# -gt 0 ] || fail
+
+case "$1" in
+-h|--help) usage ;;
+esac
+
+MODE="$1"; shift
+case "$MODE" in
+build|test|repl|quick|demo|exec|tags|lint|init) run_$MODE "$@" ;;
+*) fail "Unknown mode: $MODE"
+esac
