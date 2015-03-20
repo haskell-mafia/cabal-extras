@@ -43,6 +43,7 @@ initialize () {
     # submodules initialized if required, this could be conditional but no harm
     # in just doing at this point.
     git submodule init
+    git submodule sync
     git submodule update
 
     # sandbox initialized if required, this should support sandboxes in parent directories
