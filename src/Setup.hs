@@ -1,7 +1,5 @@
 #!/usr/bin/env runhaskell
 
-{-# LANGUAGE OverloadedStrings #-}
-import qualified Data.Text as T
 import           Data.Time (formatTime, getCurrentTime)
 import           Data.List (intercalate)
 import           Data.Version (showVersion)
@@ -34,7 +32,7 @@ genBuildInfo verbosity pkg info = do
   createDirectoryIfMissingVerbose verbosity True (autogenModulesDir info)
   let (PackageName pname) = pkgName . package $ pkg
       version = pkgVersion . package $ pkg
-      name = "BuildInfo_" ++ (T.unpack . T.replace "-" "_" . T.pack $ pname)
+      name = "BuildInfo_" ++ (map (\c -> if c == '-' then '_' else c) pname)
       targetHs = autogenModulesDir info </> name <.> "hs"
       targetText = autogenModulesDir info </> "version.txt"
   t <- timestamp
