@@ -77,7 +77,7 @@ initialize () {
 #
 run_build () {
     initialize
-    cabal build
+    cabal build --ghc-option="-Werror"
 }
 
 #
