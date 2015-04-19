@@ -7,7 +7,7 @@ import           Data.Version (showVersion)
 import           Distribution.PackageDescription
 import           Distribution.Verbosity
 import           Distribution.Simple
-import           Distribution.Simple.Setup (BuildFlags(..), fromFlag)
+import           Distribution.Simple.Setup (BuildFlags(..), ReplFlags(..), TestFlags(..), fromFlag)
 import           Distribution.Simple.LocalBuildInfo
 import           Distribution.Simple.BuildPaths (autogenModulesDir)
 import           Distribution.Simple.Utils (createDirectoryIfMissingVerbose, rewriteFile)
@@ -19,13 +19,17 @@ import           System.Process (readProcess)
 main :: IO ()
 main =
   let hooks = simpleUserHooks
-   in defaultMainWithHooks hooks { buildHook = withGenBuildInfo hooks }
-
-withGenBuildInfo :: UserHooks -> PackageDescription -> LocalBuildInfo -> UserHooks -> BuildFlags -> IO ()
-withGenBuildInfo old pkg info hooks flags = do
-  let verbosity = fromFlag (buildVerbosity flags)
-  genBuildInfo verbosity pkg info
-  (buildHook old) pkg info hooks flags
+   in defaultMainWithHooks hooks {
+     buildHook = \pd lbi uh flags -> do
+       genBuildInfo (fromFlag $ buildVerbosity flags) pd lbi
+       (buildHook hooks) pd lbi uh flags
+   , replHook = \pd lbi uh flags args -> do
+       genBuildInfo (fromFlag $ replVerbosity flags) pd lbi
+       (replHook hooks) pd lbi uh flags args
+   , testHook = \pd lbi uh flags -> do
+       genBuildInfo (fromFlag $ testVerbosity flags) pd lbi
+       (testHook hooks) pd lbi uh flags
+   }
 
 genBuildInfo :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()
 genBuildInfo verbosity pkg info = do
