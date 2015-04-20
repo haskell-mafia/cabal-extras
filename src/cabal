@@ -17,6 +17,7 @@ Commands:
     lint            Lint the project.
     init            Start a new project.
     update          Cabal update, but limited to retrieving at most once per day.
+    clean           Remove compiled artifacts.
 EOF
     exit ${status}
 }
@@ -105,6 +106,13 @@ run_quick () {
 }
 
 #
+# Remove compiled artifacts.
+#
+run_clean () {
+    cabal clean
+}
+
+#
 # Build and run the configured demonstration executable.
 #
 run_demo () {
@@ -171,6 +179,6 @@ esac
 
 MODE="$1"; shift
 case "$MODE" in
-build|test|repl|quick|demo|exec|tags|lint|init|update) run_$MODE "$@" ;;
+build|test|repl|quick|demo|exec|tags|lint|init|update|clean) run_$MODE "$@" ;;
 *) fail "Unknown mode: $MODE"
 esac
