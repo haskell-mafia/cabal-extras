@@ -26,9 +26,9 @@ main =
    , replHook = \pd lbi uh flags args -> do
        genBuildInfo (fromFlag $ replVerbosity flags) pd lbi
        (replHook hooks) pd lbi uh flags args
-   , testHook = \pd lbi uh flags -> do
-       genBuildInfo (fromFlag $ testVerbosity flags) pd lbi
-       (testHook hooks) pd lbi uh flags
+   , testHook = \args pd lbi uh flags -> do
+       genBuildInfo (fromFlag $ testVerbosity flags) pd lbi 
+       (testHook hooks) args pd lbi uh flags
    }
 
 genBuildInfo :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()
