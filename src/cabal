@@ -42,16 +42,17 @@ project_name () {
 # brute force wins.
 #
 initialize () {
-    # sandbox initialized if required, this should support sandboxes in parent directories
-    [ -f cabal.sandbox.config ] || {
-        cabal sandbox init
-    }
-
     # sandbox has all sources
     project=$(project_name)
     [ ! -f "${project}.sandbox" ] || {
         SANDBOX="--sandbox $(cat ${project}.sandbox)"
     }
+
+    # sandbox initialized if required, this should support sandboxes in parent directories
+    [ -f cabal.sandbox.config ] || {
+        cabal sandbox ${SANDBOX:-} init
+    }
+
     [ ! -f "$project.submodules" ] || {
         # submodules initialized if required, the "has it been done before" is pretty crude, but check is useful.
         cat $project.submodules | while read submodule; do
