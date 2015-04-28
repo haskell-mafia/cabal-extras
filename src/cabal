@@ -44,13 +44,15 @@ project_name () {
 initialize () {
     # sandbox has all sources
     project=$(project_name)
+    SANDBOX_DIR=.cabal-sandbox
     [ ! -f "${project}.sandbox" ] || {
         SANDBOX="--sandbox $(cat ${project}.sandbox)"
     }
 
     # sandbox initialized if required, this should support sandboxes in parent directories
     [ -f cabal.sandbox.config ] || {
-        cabal sandbox ${SANDBOX:-} init
+        SANDBOX_DIR=$(cat ${project}.sandbox)
+        SANDBOX="--sandbox ${SANDBOX_DIR}"
     }
 
     [ ! -f "$project.submodules" ] || {
@@ -64,8 +66,9 @@ initialize () {
         )
 
         cat $project.submodules | while read submodule; do
-            # ideally this would be conditional but yeh, stuff
-            cabal sandbox add-source ${SANDBOX:-} "$submodule"
+            if ! grep -q "${submodule}\"" ${SANDBOX_DIR}/add-source-timestamps; then
+                cabal sandbox add-source ${SANDBOX:-} "$submodule"
+            fi
         done
     }
 
