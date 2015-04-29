@@ -24,7 +24,7 @@ EOF
 
 fail () {
      message="${1:-}"
-     [ -z "$message" ] || echo message 1>&2
+     [ -z "$message" ] || echo "${message}" 1>&2
      usage 1 1>&2
 }
 
@@ -109,8 +109,8 @@ run_quick () {
     [ $# -eq 1 ] || fail "Quick requires a single argument, specifying the entry point you want to load."
     [ -f "$1" ] || fail "The entry point does not exist."
     [ ! -d src ] || SRC_DIRS="-isrc"
-    [ ! -d test ] || SRC_DIRS="${${SRC_DIRS:-} -itest}"
-    [ ! -d dist/build/autogen ] || SRC_DIR="${${SRC_DIRS:-} -idist/build/autogen"
+    [ ! -d test ] || SRC_DIRS="${SRC_DIRS:-} -itest"
+    [ ! -d dist/build/autogen ] || SRC_DIR="${SRC_DIRS:-} -idist/build/autogen"
     ghci -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} "$1"
 }
 
