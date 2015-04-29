@@ -46,13 +46,13 @@ initialize () {
     project=$(project_name)
     SANDBOX_DIR=.cabal-sandbox
     [ ! -f "${project}.sandbox" ] || {
-        SANDBOX="--sandbox $(cat ${project}.sandbox)"
+        SANDBOX_DIR=$(cat ${project}.sandbox)
+        SANDBOX="--sandbox ${SANDBOX_DIR}"
     }
 
     # sandbox initialized if required, this should support sandboxes in parent directories
     [ -f cabal.sandbox.config ] || {
-        SANDBOX_DIR=$(cat ${project}.sandbox)
-        SANDBOX="--sandbox ${SANDBOX_DIR}"
+        cabal sandbox ${SANDBOX:-} init
     }
 
     [ ! -f "$project.submodules" ] || {
