@@ -110,7 +110,7 @@ run_quick () {
     [ -f "$1" ] || fail "The entry point does not exist."
     [ ! -d src ] || SRC_DIRS="-isrc"
     [ ! -d test ] || SRC_DIRS="${SRC_DIRS:-} -itest"
-    [ ! -d dist/build/autogen ] || SRC_DIR="${SRC_DIRS:-} -idist/build/autogen"
+    [ ! -d dist/build/autogen ] || SRC_DIRS="${SRC_DIRS:-} -idist/build/autogen"
     ghci -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} "$1"
 }
 
