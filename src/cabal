@@ -238,10 +238,10 @@ run_depend () {
 }
 
 #
-# Run hasktags on this project (building hlint if necessary).
+# Run hasktags on this project.
 #
 run_tags () {
-    # should install hasktags if it doesn't exist yet.
+    # TODO should install hasktags if it doesn't exist yet.
     hasktags -e src test main
 }
 
@@ -249,9 +249,8 @@ run_tags () {
 # Run hlint on this project (building hlint if necessary).
 #
 run_lint () {
-    # do something with hlint - need to work out best convention to build up
-    echo "Someone should really implement this."
-    exit 1
+    # TODO should install hlint if it doesn't exist yet.
+    hlint src test main
 }
 
 #
