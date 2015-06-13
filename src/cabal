@@ -108,7 +108,7 @@ run_repl () {
 #
 run_quick () {
     initialize
-    [ $# -eq 1 ] || fail "Quick requires a single argument, specifying the entry point you want to load."
+    [ $# -eq 1 ] || fail "'quick' requires a single argument, specifying the entry point you want to load."
     [ -f "$1" ] || fail "The entry point does not exist."
     [ ! -d src ] || SRC_DIRS="-isrc"
     [ ! -d test ] || SRC_DIRS="${SRC_DIRS:-} -itest"
@@ -128,7 +128,7 @@ run_clean () {
 #
 
 # using this instead of git submodule foreach in the hope I can avoid recursive submodule init/updates (probably can't though, so this may be irrelevant).
-list_modules() {
+list_modules () {
     [ $# -eq 1 ] || fail "list_modules requires a single argument, specifying the root of the project."
     MODULES="$1/.gitmodules"
     if [ -f "${MODULES}" ]; then
@@ -136,7 +136,7 @@ list_modules() {
     fi
 }
 
-force_sync() {
+force_sync () {
     [ $# -eq 1 ] || fail "force sync requires a single argument, specifying the root of the project."
     SYNC_ROOT="$1"
     (
@@ -227,7 +227,7 @@ run_depend_sync () {
 }
 
 run_depend () {
-    [ $# -eq 1 ] || fail "Quick requires a single argument, specifying the mod as one of [check|deep-check|sync]."
+    [ $# -eq 1 ] || fail "'depend' requires a single argument, specifying the mode as one of [check|deep-check|sync]."
 
     case "$1" in
     check) run_depend_check ;;
