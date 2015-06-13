@@ -18,6 +18,7 @@ Commands:
     init            Start a new project.
     update          Cabal update, but limited to retrieving at most once per day.
     clean           Remove compiled artifacts.
+    depend          Dependency organisation tooling check|deep-check|sync.
 EOF
     exit ${status}
 }
