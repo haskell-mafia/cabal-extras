@@ -58,7 +58,9 @@ initialize () {
     [ ! -f "$project.submodules" ] || {
         # submodules initialized if required, the "has it been done before" is pretty crude, but check is useful.
         cat $project.submodules | while read submodule; do
-            find "$submodule" -maxdepth 2 -name \*.cabal
+            if [ -d "$submodule" ]; then
+               find "$submodule" -maxdepth 2 -name \*.cabal
+            fi
         done | grep -q . || (
             cd $(git rev-parse --show-toplevel)
             git submodule init
@@ -119,6 +121,120 @@ run_quick () {
 #
 run_clean () {
     cabal clean
+}
+
+#
+# Dependency tools.
+#
+
+# using this instead of git submodule foreach in the hope I can avoid recursive submodule init/updates (probably can't though, so this may be irrelevant).
+list_modules() {
+    [ $# -eq 1 ] || fail "list_modules requires a single argument, specifying the root of the project."
+    MODULES="$1/.gitmodules"
+    if [ -f "${MODULES}" ]; then
+        grep path "${MODULES}" | sed 's/.*= //'
+    fi
+}
+
+force_sync() {
+    [ $# -eq 1 ] || fail "force sync requires a single argument, specifying the root of the project."
+    SYNC_ROOT="$1"
+    (
+        cd "${SYNC_ROOT}" ## required for submodule commands on older versions of git
+        git fetch
+        git submodule init
+        git submodule update
+        git submodule sync
+    ) > /dev/null 2>&1
+}
+
+run_depend_check () {
+    TOP=$(git rev-parse --show-toplevel)
+    force_sync "${TOP}"
+    list_modules "${TOP}" | while read SUBMODULE; do
+        (
+            cd "${TOP}/${SUBMODULE}"
+            echo "$SUBMODULE"
+            git fetch > /dev/null 2>&1
+            OUT=$(git rev-list --left-right --count origin/master...)
+            BEHIND=$(echo $OUT | awk '{ print $1 }')
+            AHEAD=$(echo $OUT | awk '{ print $2 }')
+
+            if [ "$AHEAD" -eq 0 -a "$BEHIND" -eq 0 ]; then
+                echo '  `- [OK]'
+            elif [ "$AHEAD" -eq 0 -a "$BEHIND" -gt 0 ]; then
+                echo '  `- [WARNING] Behind master.'
+            elif [ "$AHEAD" -gt 0 -a "$BEHIND" -eq 0 ]; then
+                echo '  `- [WARNING] Commits not on master.'
+            elif [ "$AHEAD" -gt 0 -a "$BEHIND" -gt 0 ]; then
+                echo '  `- [WARNING] Commits not on master & behind master.'
+            fi
+        )
+    done
+}
+
+run_depend_deep_check () {
+    TOP=$(git rev-parse --show-toplevel)
+    force_sync "${TOP}"
+    list_modules "${TOP}" | while read SUBMODULE; do
+        (
+            echo "$SUBMODULE"
+            force_sync "${TOP}/${SUBMODULE}"
+            list_modules "${TOP}/${SUBMODULE}" | while read SUBSUBMODULE; do
+                if [ -e "${TOP}/${SUBSUBMODULE}" ]; then
+                    NESTED=$(cd "${TOP}/${SUBMODULE}/${SUBSUBMODULE}" > /dev/null 2>&1; git rev-parse HEAD);
+                    OUTER=$(cd "${TOP}/${SUBSUBMODULE}" > /dev/null 2>&1; git rev-parse HEAD);
+                    if [ "${NESTED}" = "${OUTER}" ]; then
+                        echo "  \`- [OK] ${SUBSUBMODULE}"
+                    else
+                        (
+                            cd "${TOP}/${SUBSUBMODULE}"
+                            git fetch > /dev/null 2>&1
+                            echo ${TOP}/${SUBSUBMODULE}
+                            OUT=$(git rev-list --left-right --count "${NESTED}...${OUTER}")
+                            BEHIND=$(echo $OUT | awk '{ print $1 }')
+                            AHEAD=$(echo $OUT | awk '{ print $2 }')
+                            echo "  \`- [WARNING] ${SUBSUBMODULE} is out of sync, outer commit ${OUTER}, nested ${NESTED}, outer is ${BEHIND} commits behind, ${AHEAD} commits ahead."
+                        )
+                    fi
+                else
+                    echo "  \`- [WARNING] Potentially missing dependency ${SUBSUBMODULE}"
+                fi
+            done
+        )
+    done
+}
+
+run_depend_sync () {
+    TOP=$(git rev-parse --show-toplevel)
+    list_modules "${TOP}" | while read SUBMODULE; do
+        (
+            echo "$SUBMODULE"
+            force_sync "${TOP}/${SUBMODULE}"
+
+            cd "${TOP}/${SUBMODULE}"
+            if git branch -a | grep -q origin/ambiata; then
+                git checkout ambiata
+                git merge origin/ambiata
+            else
+                git checkout master
+                git merge origin/master
+            fi
+
+            force_sync "${TOP}/${SUBMODULE}"
+        )
+    done
+}
+
+run_depend () {
+    [ $# -eq 1 ] || fail "Quick requires a single argument, specifying the mod as one of [check|deep-check|sync]."
+
+    case "$1" in
+    check) run_depend_check ;;
+    deep-check) run_depend_deep_check ;;
+    sync) run_depend_sync;;
+    *) fail "Unknown mode [$1], expected one of [check|deep-check|sync]" ;;
+    esac
 }
 
 #
@@ -188,6 +304,6 @@ esac
 
 MODE="$1"; shift
 case "$MODE" in
-build|test|repl|quick|demo|exec|tags|lint|init|update|clean) run_$MODE "$@" ;;
+build|test|repl|quick|demo|exec|tags|lint|init|update|clean|depend) run_$MODE "$@" ;;
 *) fail "Unknown mode: $MODE"
 esac
