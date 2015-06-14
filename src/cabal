@@ -222,6 +222,7 @@ run_depend_sync () {
                 git merge origin/master
             fi
 
+            force_sync "${TOP}/${SUBMODULE}"
         )
     done
 }
