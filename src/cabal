@@ -123,6 +123,7 @@ run_quick () {
 # Load up ghcid
 #
 run_watch () {
+    command -v ghcid >/dev/null 2>&1 || { echo >&2 "ghcid required not installed. To install: create a fresh cabal sandbox, cabal install ghcid and add to your \$PATH."; exit 1; }
     initialize
     [ $# -eq 1 ] || fail "Watch requires a single argument, specifying the entry point you want to load."
     [ -f "$1" ] || fail "The entry point does not exist."
