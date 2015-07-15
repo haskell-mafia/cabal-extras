@@ -13,6 +13,7 @@ Commands:
                     across multiple source trees at once.
     watch           Watches filesystem for changes and stays running, compiles and gives quick feedback.
                     Similarly to quick needs an entrypoint.
+                    To run tests use '-T EXPR' i.e. '-T Test.Pure.tests'
     demo            If this project has a demo application, this builds and runs it.
     exec            If this project has an executable, this builds and runs it.
     tags            Generate tags for this project.
@@ -125,12 +126,14 @@ run_quick () {
 run_watch () {
     command -v ghcid >/dev/null 2>&1 || { echo >&2 "ghcid required not installed. To install: create a fresh cabal sandbox, cabal install ghcid and add to your \$PATH."; exit 1; }
     initialize
-    [ $# -eq 1 ] || fail "Watch requires a single argument, specifying the entry point you want to load."
+    [ $# -ge 1 ] || fail "Watch requires atleast one argument, specifying the entry point you want to load."
     [ -f "$1" ] || fail "The entry point does not exist."
     [ ! -d src ] || SRC_DIRS="-isrc"
     [ ! -d test ] || SRC_DIRS="${SRC_DIRS:-} -itest"
     [ ! -d dist/build/autogen ] || SRC_DIRS="${SRC_DIRS:-} -idist/build/autogen"
-    ghcid -c "ghci -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} \"$1\""
+    ENTRY=$1
+    shift
+    ghcid -c "ghci -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} \"$ENTRY\"" "$@"
 }
 
 #
