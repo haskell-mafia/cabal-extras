@@ -1,3 +1,4 @@
+# EXTRAS_VERSION
 #!/bin/sh -eu
 
 usage () {
@@ -115,10 +116,11 @@ run_upgrade () {
     echo "Checking for a new version of cabal extras ..."
     TZ=$(date +"%T")
     curl --silent "https://raw.githubusercontent.com/ambiata/cabal-extras/master/src/cabal?$TZ" > /tmp/cabal
-    if ! cmp ./cabal /tmp/cabal  >/dev/null 2>&1
+    if ! cmp <(tail -n +2 ./cabal) <(tail -n +2 /tmp/cabal)  >/dev/null 2>&1
     then
       echo "New version found and upgraded. You can now commit it to your git repo."
-      mv /tmp/cabal ./cabal
+      COMMIT_VERSION=$(git ls-remote  https://github.com/ambiata/cabal-extras | grep refs/heads/master | cut -f 1)
+      sed "s/EXTRAS_VERSION/$COMMIT_VERSION/g" /tmp/cabal > ./cabal
       chmod +x ./cabal
     else
       echo "You have latest cabal extras script"
