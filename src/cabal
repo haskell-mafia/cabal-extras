@@ -96,7 +96,7 @@ run_build () {
 #
 run_test () {
     initialize
-    cabal test "$@"
+    cabal test --show-details=streaming "$@"
 }
 
 #
