@@ -115,6 +115,8 @@ run_upgrade () {
     echo "Checking for a new version of cabal extras ..."
     TZ=$(date +"%T")
     curl --silent "https://raw.githubusercontent.com/ambiata/cabal-extras/master/src/cabal?$TZ" > /tmp/cabal
+    COMMIT_VERSION=$(git ls-remote  https://github.com/ambiata/cabal-extras | grep refs/heads/master | cut -f 1)
+    echo "# Version: $COMMIT_VERSION" >> /tmp/cabal
     if ! cmp ./cabal /tmp/cabal  >/dev/null 2>&1
     then
       echo "New version found and upgraded. You can now commit it to your git repo."
