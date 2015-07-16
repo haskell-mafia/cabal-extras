@@ -22,6 +22,7 @@ Commands:
     update          Cabal update, but limited to retrieving at most once per day.
     clean           Remove compiled artifacts.
     depend          Dependency organisation tooling check|deep-check|sync.
+    upgrade         Upgrade this cabal extras script.
 EOF
     exit ${status}
 }
@@ -105,6 +106,23 @@ run_test () {
 run_repl () {
     initialize
     cabal repl "$@"
+}
+
+#
+# Upgrade the script in place
+#
+run_upgrade () {
+    echo "Checking for a new version of cabal extras ..."
+    TZ=$(date +"%T")
+    curl --silent "https://raw.githubusercontent.com/ambiata/cabal-extras/master/src/cabal?$TZ" > /tmp/cabal
+    if ! cmp ./cabal /tmp/cabal  >/dev/null 2>&1
+    then
+      echo "New version found and upgraded. You can now commit it to your git repo."
+      mv /tmp/cabal ./cabal
+      chmod +x ./cabal
+    else
+      echo "You have latest cabal extras script"
+    fi
 }
 
 #
@@ -298,6 +316,6 @@ esac
 
 MODE="$1"; shift
 case "$MODE" in
-build|test|repl|quick|tags|lint|update|clean|depend|watch) run_$MODE "$@" ;;
+build|test|repl|quick|tags|lint|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
 *) fail "Unknown mode: $MODE"
 esac
