@@ -23,6 +23,9 @@ main =
      preConf = \args flags -> do
        createDirectoryIfMissingVerbose silent True "gen"
        (preConf hooks) args flags
+   , sDistHook  = \pd mlbi uh flags -> do
+       genBuildInfo silent pd
+       (sDistHook hooks) pd mlbi uh flags
    , buildHook = \pd lbi uh flags -> do
        genBuildInfo (fromFlag $ buildVerbosity flags) pd
        (buildHook hooks) pd lbi uh flags
