@@ -83,6 +83,16 @@ initialize () {
         CABAL_SOURCES=$(cd "$PROJECT_ROOT" && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
     fi
 
+    # Remove any cabal sources that are no longer available
+
+    for source in $(cabal sandbox list-sources | tail -n +4 | sed '$d' | sed '$d'); do
+      source_path=$(echo $source | sed s#$(pwd)/##)
+      if ! $(echo "${CABAL_SOURCES}" | grep -q "${source_path}"); then
+        echo "${source_path} no longer exists - removing from the sandbox"
+        cabal sandbox delete-source "$source" 1> /dev/null
+      fi
+    done
+
     # We add-sources only if they haven't been added before. We should also
     # remove them if they aren't needed, but @charleso has promised to do this
     # so for now we live in anticipation.
