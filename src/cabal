@@ -60,24 +60,24 @@ initialize () {
         cabal sandbox ${SANDBOX:-} init
     }
 
-    [ ! -f "$project.submodules" ] || {
-        # submodules initialized if required, the "has it been done before" is pretty crude, but check is useful.
-        cat $project.submodules | while read submodule; do
-            if [ -d "$submodule" ]; then
-               find "$submodule" -maxdepth 2 -name \*.cabal
-            fi
-        done | grep -q . || (
-            cd $(git rev-parse --show-toplevel)
-            git submodule init
-            git submodule update
-        )
+    for submodule in $(find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | sed 's/[^\/]*$//g'| sed 's/\/$//g');
+    do
+        if [ -d "$submodule" ]; then
+           find "$submodule" -maxdepth 2 -name \*.cabal
+        fi
+    done | grep -q . || (
+        cd $(git rev-parse --show-toplevel)
+        git submodule init
+        git submodule update
+    )
 
-        cat $project.submodules | while read submodule; do
-            if ! grep -q "${submodule}\"" ${SANDBOX_DIR}/add-source-timestamps; then
-                cabal sandbox add-source ${SANDBOX:-} "$submodule"
-            fi
-        done
-    }
+    for submodule in $(find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | sed 's/[^\/]*$//g'| sed 's/\/$//g');
+    do
+        if ! grep -q "${submodule}\"" ${SANDBOX_DIR}/add-source-timestamps; then
+            cabal sandbox add-source ${SANDBOX:-} "$submodule"
+        fi
+    done
+
 
     # all dependencies installed, and configure been run?
     cabal install -j --only-dependencies --force-reinstalls --enable-tests
