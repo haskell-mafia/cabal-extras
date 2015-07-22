@@ -63,7 +63,7 @@ initialize () {
     PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
     # init any submodules that we need. Optional $project.submodules files.
-    MODULE_LIST=$(cd $PROJECT_ROOT && git submodule | grep "^-" | cut -d ' ' -f 2)
+    MODULE_LIST=$(cd "$PROJECT_ROOT" && git submodule | grep "^-" | cut -d ' ' -f 2)
     [ ! -f "$project.submodules" ] || {
         MODULE_LIST=$(cat $project.submodules)
         echo "Using $project.submodules, however this is now optional, You can remove this file if you like and it will be calculated for you."
@@ -79,7 +79,7 @@ initialize () {
     )
 
     # discover and add cabal sources
-    CABAL_SOURCES=$(cd $PROJECT_ROOT && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
+    CABAL_SOURCES=$(cd "$PROJECT_ROOT" && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
     [ ! -f "$project.submodules" ] || {
         CABAL_SOURCES=$MODULE_LIST
     }
