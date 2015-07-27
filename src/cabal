@@ -64,19 +64,12 @@ initialize () {
 
     # init any submodules that we need. Optional $project.submodules files.
     MODULE_LIST=$(cd "$PROJECT_ROOT" && git submodule | grep "^-" | cut -d ' ' -f 2)
-    [ ! -f "$project.submodules" ] || {
-        MODULE_LIST=$(cat $project.submodules)
-        echo "Using $project.submodules, however this is now optional, You can remove this file if you like and it will be calculated for you."
-    }
     for submodule in $MODULE_LIST
     do
-        if [ -d "$submodule" ]; then
-           find "$submodule" -maxdepth 2 -name \*.cabal
-        fi
-    done | grep -q . || (
-        cd $PROJECT_ROOT
-        git submodule update --init
-    )
+        # only update and init submodules that are in uninitiated submodules
+        # this will work for sub-projects
+        git submodule update --init $submodule
+    done
 
     # discover and add cabal sources
     CABAL_SOURCES=$(cd "$PROJECT_ROOT" && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
