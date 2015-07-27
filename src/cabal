@@ -62,27 +62,35 @@ initialize () {
 
     PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
-    # init any submodules that we need. Optional $project.submodules files.
-    MODULE_LIST=$(cd "$PROJECT_ROOT" && git submodule | grep "^-" | cut -d ' ' -f 2)
-    for submodule in $MODULE_LIST
-    do
-        # only update and init submodules that are in uninitiated submodules
-        # this will work for sub-projects
+    # init any submodules that we need. Don't worry about explicit submodules
+    # file here, we just want to trust git to tell us things that haven't been
+    # initialized, we really _don't_ want to run this just because a module is
+    # dirty from development changes etc...
+
+    UNINITIALIZED=$(cd "$PROJECT_ROOT" && git submodule | grep "^-" | cut -d ' ' -f 2)
+    for submodule in $UNINITIALIZED; do
         git submodule update --init $submodule
     done
 
-    # discover and add cabal sources
-    CABAL_SOURCES=$(cd "$PROJECT_ROOT" && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
-    [ ! -f "$project.submodules" ] || {
-        CABAL_SOURCES=$MODULE_LIST
-    }
-    for submodule in $CABAL_SOURCES;
-    do
+    # if there is an explicit submodules file, then use it (hysterical
+    # raisins, compatability or something...), otherwise auto-magicically
+    # discover the sources from the lib directory.
+
+    if [ -f "$project.submodules" ]; then
+        CABAL_SOURCES=$(cat $project.submodules)
+    else
+        CABAL_SOURCES=$(cd "$PROJECT_ROOT" && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
+    fi
+
+    # We add-sources only if they haven't been added before. We should also
+    # remove them if they aren't needed, but @charleso has promised to do this
+    # so for now we live in anticipation.
+
+    for submodule in $CABAL_SOURCES; do
         if ! grep -q "${submodule}\"" ${SANDBOX_DIR}/add-source-timestamps; then
             cabal sandbox add-source ${SANDBOX:-} "$submodule"
         fi
     done
-
 
     # all dependencies installed, and configure been run?
     cabal install -j --only-dependencies --force-reinstalls --enable-tests
