@@ -78,6 +78,7 @@ initialize () {
 
     if [ -f "$project.submodules" ]; then
         CABAL_SOURCES=$(cat $project.submodules)
+        echo "Using $project.submodules, however this is now optional, You can remove this file if you like and it will be calculated for you."
     else
         CABAL_SOURCES=$(cd "$PROJECT_ROOT" && find lib -maxdepth 4 ! -path "lib/*/bin/*" -name \*.cabal | xargs -L 1 dirname)
     fi
