@@ -69,7 +69,7 @@ initialize () {
 
     UNINITIALIZED=$(cd "$PROJECT_ROOT" && git submodule | grep "^-" | cut -d ' ' -f 2)
     for submodule in $UNINITIALIZED; do
-        git submodule update --init $submodule
+        $(cd "$PROJECT_ROOT" && git submodule update --init $submodule) || exit $?
     done
 
     # if there is an explicit submodules file, then use it (hysterical
@@ -89,7 +89,7 @@ initialize () {
 
     for submodule in $CABAL_SOURCES; do
         if ! grep -q "${submodule}\"" ${SANDBOX_DIR}/add-source-timestamps; then
-            cabal sandbox add-source ${SANDBOX:-} "$submodule"
+            cabal sandbox add-source ${SANDBOX:-} "$PROJECT_ROOT/$submodule"
         fi
     done
 
