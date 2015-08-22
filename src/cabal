@@ -8,6 +8,8 @@ usage () {
 Commands:
     build           Build this project, including all executables and test suites.
     test            Test this project, by default this runs all test suites.
+    testci          Test this project, but process control characters (\b, \r) which
+                    reposition the cursor, prior to emitting each line of output.
     repl            Start the repl, by default on the the main library source.
     quick           Start the repl directly skipping cabal, this is useful developing
                     across multiple source trees at once.
@@ -122,6 +124,53 @@ run_build () {
 run_test () {
     initialize
     cabal test --show-details=streaming "$@"
+}
+
+#
+# Cabal test for CI build bots.
+#
+run_testci () {
+    # Create a temporary directory which will be deleted when the script
+    # terminates. Unfortunately `mktemp` doesn't behave the same on
+    # Linux and OS/X so we need to try two different approaches.
+    CABAL_EXTRAS_TEMP=$(mktemp -d 2>/dev/null || mktemp -d -t 'cabal-extras')
+    trap "rm -rf $CABAL_EXTRAS_TEMP" EXIT
+
+    # Write out a haskell program which performs the control character
+    # processing.
+    UNCTL=$CABAL_EXTRAS_TEMP/unctl.hs
+    cat << EOF > $UNCTL
+import System.IO
+
+main :: IO ()
+main = do
+    hSetBuffering stdin  LineBuffering
+    hSetBuffering stdout LineBuffering
+    interact (go [])
+  where
+    go :: [Char] -- ^ current line
+       -> [Char] -- ^ stdin
+       -> [Char] -- ^ stdout
+
+    -- backspace - delete previous character
+    go (_ : line) ('\b' : xs) = go line xs
+    go []         ('\b' : xs) = go []   xs
+
+    -- carriage return - delete the whole line
+    go _          ('\r' : xs) = go []   xs
+
+    -- line feed - emit the current line
+    go line       ('\n' : xs) = reverse ('\n' : line) ++ go [] xs
+
+    -- normal character - add to current line
+    go line       (x    : xs) = go (x : line) xs
+
+    -- end of stream - emit the current line
+    go line       []          = line
+EOF
+
+    # Run the tests, but fix up their output before emitting it.
+    run_test "$@" | runghc $UNCTL
 }
 
 #
@@ -344,6 +393,6 @@ esac
 
 MODE="$1"; shift
 case "$MODE" in
-build|test|repl|quick|tags|lint|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
+build|test|testci|repl|quick|tags|lint|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
 *) fail "Unknown mode: $MODE"
 esac
