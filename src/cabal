@@ -170,9 +170,10 @@ main = do
 EOF
 
     # Run the tests, but fix up their output before emitting it.
-    mkfifo pipe
-    runghc $UNCTL < pipe &
-    run_test "$@" > pipe
+    PIPE=$CABAL_EXTRAS_TEMP/testci.pipe
+    mkfifo $PIPE
+    runghc $UNCTL < $PIPE &
+    run_test "$@" > $PIPE
 }
 
 #
