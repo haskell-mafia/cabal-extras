@@ -1,5 +1,9 @@
 #!/bin/sh -eu
 
+if [ -z ${CABAL_CONFIG_ARGS+1} ]; then
+    CABAL_CONFIG_ARGS=
+fi
+
 usage () {
     status=${1:-0}
     cat <<EOF
@@ -25,6 +29,11 @@ Commands:
     clean           Remove compiled artifacts.
     depend          Dependency organisation tooling check|deep-check|sync.
     upgrade         Upgrade this cabal extras script.
+
+
+Environment variables:
+    CABAL_CONFIG_ARGS    Extra arguments to pass to 'cabal configure'.
+
 EOF
     exit ${status}
 }
@@ -107,7 +116,7 @@ initialize () {
 
     # all dependencies installed, and configure been run?
     cabal install -j --only-dependencies --force-reinstalls --enable-tests
-    cabal configure --enable-tests
+    cabal configure --enable-tests $CABAL_CONFIG_ARGS
 }
 
 #
