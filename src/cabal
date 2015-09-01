@@ -97,7 +97,7 @@ initialize () {
     # Remove any cabal sources that are no longer available
 
     for source in $(cabal sandbox list-sources | tail -n +4 | sed '$d' | sed '$d'); do
-      source_path=$(echo $source | sed s#$(pwd)/##)
+      source_path=$(echo $source | sed s#${PROJECT_ROOT}/##)
       if ! $(echo "${CABAL_SOURCES}" | grep -q "${source_path}"); then
         echo "${source_path} no longer exists - removing from the sandbox"
         cabal sandbox delete-source "$source" 1> /dev/null
