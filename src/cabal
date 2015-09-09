@@ -124,7 +124,7 @@ initialize () {
 #
 run_build () {
     initialize
-    cabal build --ghc-option="-Werror"
+    cabal build --ghc-option="-Werror" "$@"
 }
 
 #
