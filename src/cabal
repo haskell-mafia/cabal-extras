@@ -14,6 +14,7 @@ Commands:
     test            Test this project, by default this runs all test suites.
     testci          Test this project, but process control characters (\b, \r) which
                     reposition the cursor, prior to emitting each line of output.
+    bench           Build and run benchmarks.
     repl            Start the repl, by default on the the main library source.
     quick           Start the repl directly skipping cabal, this is useful developing
                     across multiple source trees at once.
@@ -115,8 +116,8 @@ initialize () {
     done
 
     # all dependencies installed, and configure been run?
-    cabal install -j --only-dependencies --force-reinstalls --enable-tests
-    cabal configure --enable-tests $CABAL_CONFIG_ARGS
+    cabal install -j --only-dependencies --force-reinstalls --enable-tests --enable-benchmarks
+    cabal configure --enable-tests --enable-benchmarks $CABAL_CONFIG_ARGS
 }
 
 #
@@ -133,6 +134,14 @@ run_build () {
 run_test () {
     initialize
     cabal test --show-details=streaming "$@"
+}
+
+#
+# Cabal bench.
+#
+run_bench () {
+    initialize
+    cabal bench "$@"
 }
 
 #
@@ -405,6 +414,6 @@ esac
 
 MODE="$1"; shift
 case "$MODE" in
-build|test|testci|repl|quick|tags|lint|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
+build|test|testci|bench|repl|quick|tags|lint|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
 *) fail "Unknown mode: $MODE"
 esac
