@@ -232,7 +232,7 @@ run_quick () {
     [ ! -d test ] || SRC_DIRS="${SRC_DIRS:-} -itest"
     [ ! -d gen ] || SRC_DIRS="${SRC_DIRS:-} -igen"
     [ ! -d dist/build/autogen ] || SRC_DIRS="${SRC_DIRS:-} -idist/build/autogen"
-    ghci -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} "$1"
+    ghci -no-user-package-db -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} "$1"
 }
 
 #
@@ -249,7 +249,7 @@ run_watch () {
     [ ! -d dist/build/autogen ] || SRC_DIRS="${SRC_DIRS:-} -idist/build/autogen"
     ENTRY=$1
     shift
-    ghcid -c "ghci -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} \"$ENTRY\"" "$@"
+    ghcid -c "ghci -no-user-package-db -package-db=$(find .cabal-sandbox -name '*-packages.conf.d') ${SRC_DIRS:-} \"$ENTRY\"" "$@"
 }
 
 #
