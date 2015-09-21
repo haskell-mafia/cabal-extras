@@ -101,7 +101,8 @@ initialize () {
       source_path=$(echo $source | sed s#${PROJECT_ROOT}/##)
       if ! $(echo "${CABAL_SOURCES}" | grep -q "${source_path}"); then
         echo "${source_path} no longer exists - removing from the sandbox"
-        cabal sandbox delete-source "$source" 1> /dev/null
+        # This will fail if there are any remaining non-existent sources
+        cabal sandbox delete-source "$source" 1> /dev/null || true
       fi
     done
 
