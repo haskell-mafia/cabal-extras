@@ -53,12 +53,48 @@ project_name () {
     find . -maxdepth 1 -name  \*.cabal -type f | xargs basename | sed -e 's/.cabal//'
 }
 
+
+mafia_exec () {
+    [ $# -eq 1 ] || fail "'mafia_exec' requires a single argument, specifying the package you wish to build."
+    EXECUTABLE=$1
+    EXECUTABLE_LOCATION=$HOME/.ambiata/mafia/bin/$EXECUTABLE
+    EXECUTABLE_DIR=$(dirname $EXECUTABLE_LOCATION)
+    [ -f "$EXECUTABLE_LOCATION" ] || {
+
+        # Create a temporary directory which will be deleted when the script
+        # terminates. Unfortunately `mktemp` doesn't behave the same on
+        # Linux and OS/X so we need to try two different approaches.
+        MAFIA_EXEC_TEMP=$(mktemp -d 2>/dev/null || mktemp -d -t 'mafia-exec')
+        trap "rm -rf $MAFIA_EXEC_TEMP" EXIT
+        mkdir -p $MAFIA_EXEC_TEMP
+
+        [ -d "$EXECUTABLE_DIR" ] || {
+           mkdir -p $EXECUTABLE_DIR
+        }
+
+        (
+            cd "$MAFIA_EXEC_TEMP"
+            cabal sandbox init || exit $?
+            cabal install $EXECUTABLE || exit $?
+        ) || exit $?
+
+        cp "$MAFIA_EXEC_TEMP/.cabal-sandbox/bin/$EXECUTABLE" "$EXECUTABLE_LOCATION" || exit $?
+    }
+    export PATH="$EXECUTABLE_DIR:$PATH"
+}
+
+
 #
 # Initialize things for a build. This can be made faster by being
 # a lot smarter about doing things conditionally, but for now,
 # brute force wins.
 #
 initialize () {
+
+    # check if happy and alex exist in mafia
+    mafia_exec "happy"
+    mafia_exec "alex"
+
     # sandbox has all sources
     project=$(project_name)
     SANDBOX_DIR=.cabal-sandbox
