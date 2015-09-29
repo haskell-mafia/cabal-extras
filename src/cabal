@@ -25,7 +25,7 @@ Commands:
     exec            If this project has an executable, this builds and runs it.
     tags            Generate tags for this project.
     lint            Lint the project.
-    init            Start a new project.
+    init            Start a new project by cloning an existing haskell repository on Github
     update          Cabal update, but limited to retrieving at most once per day.
     clean           Remove compiled artifacts.
     depend          Dependency organisation tooling check|deep-check|sync.
@@ -437,6 +437,19 @@ run_update () {
     fi
 }
 
+#
+# Download one of the haskell templates
+#
+run_init () {
+    [ $# -eq 1 ] || fail "'init' requires a single argument, specifying the template repository."
+
+    mkdir tmp
+    git clone http://github.com/$1 tmp
+    rm -rf tmp/.git
+    shopt -s dotglob
+    cp -r tmp/* .
+    rm -rf tmp
+}
 
 #
 # The actual start of the script.....
@@ -451,6 +464,6 @@ esac
 
 MODE="$1"; shift
 case "$MODE" in
-build|test|testci|bench|repl|quick|tags|lint|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
+build|test|testci|bench|repl|quick|tags|lint|init|update|clean|depend|watch|upgrade) run_$MODE "$@" ;;
 *) fail "Unknown mode: $MODE"
 esac
