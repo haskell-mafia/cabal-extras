@@ -1,6 +1,5 @@
 #!/usr/bin/env runhaskell
 
-import           Data.Time (formatTime, getCurrentTime)
 import           Data.List (intercalate)
 import           Data.Version (showVersion)
 
@@ -13,7 +12,6 @@ import           Distribution.Simple.BuildPaths (autogenModulesDir)
 import           Distribution.Simple.Utils (createDirectoryIfMissingVerbose, rewriteFile)
 
 import           System.FilePath ((</>), (<.>))
-import           System.Locale (defaultTimeLocale)
 import           System.Process (readProcess)
 
 main :: IO ()
@@ -60,12 +58,12 @@ genBuildInfo verbosity pkg = do
     ]
   rewriteFile targetText buildVersion
 
-timestamp :: IO String
-timestamp =
-  formatTime defaultTimeLocale "%Y%m%d%H%M%S" `fmap` getCurrentTime
-
 gitVersion :: IO String
 gitVersion = do
   ver <- readProcess "git" ["log", "--pretty=format:%h", "-n", "1"] ""
   notModified <- ((>) 1 . length) `fmap` readProcess "git" ["status", "--porcelain"] ""
   return $ ver ++ if notModified then "" else "-M"
+
+timestamp :: IO String
+timestamp =
+  readProcess "date" ["+%Y%m%d%H%M%S"] ""
