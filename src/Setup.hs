@@ -1,6 +1,7 @@
 #!/usr/bin/env runhaskell
 
 import           Data.List (intercalate)
+import           Data.Monoid ((<>))
 import           Data.Version (showVersion)
 
 import           Distribution.PackageDescription
@@ -66,4 +67,11 @@ gitVersion = do
 
 timestamp :: IO String
 timestamp =
-  readProcess "date" ["+%Y%m%d%H%M%S"] ""
+  readProcess "date" ["+%Y%m%d%H%M%S"] "" >>= \s ->
+    case splitAt 14 s of
+      (d, n : []) ->
+        if (length d == 14 && filter isDigit d == d)
+          then return d
+          else fail $ "date has failed to produce the correct format [" <> s <> "]."
+      _ ->
+        fail $ "date has failed to produce a date long enough [" <> s <> "]."
