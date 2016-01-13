@@ -1,5 +1,6 @@
 #!/usr/bin/env runhaskell
 
+import           Data.Char (isDigit)
 import           Data.List (intercalate)
 import           Data.Monoid ((<>))
 import           Data.Version (showVersion)
