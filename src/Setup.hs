@@ -27,15 +27,15 @@ main =
        (sDistHook hooks) pd mlbi uh flags
    , buildHook = \pd lbi uh flags -> do
        genBuildInfo (fromFlag $ buildVerbosity flags) pd
-       genDependencyInfo pd lbi
+       genDependencyInfo (fromFlag $ buildVerbosity flags) pd lbi
        (buildHook hooks) pd lbi uh flags
    , replHook = \pd lbi uh flags args -> do
        genBuildInfo (fromFlag $ replVerbosity flags) pd
-       genDependencyInfo pd lbi
+       genDependencyInfo (fromFlag $ replVerbosity flags) pd lbi
        (replHook hooks) pd lbi uh flags args
    , testHook = \args pd lbi uh flags -> do
        genBuildInfo (fromFlag $ testVerbosity flags) pd
-       genDependencyInfo pd lbi
+       genDependencyInfo (fromFlag $ testVerbosity flags) pd lbi
        (testHook hooks) args pd lbi uh flags
    }
 
@@ -62,8 +62,8 @@ genBuildInfo verbosity pkg = do
     ]
   rewriteFile targetText buildVersion
 
-genDependencyInfo :: PackageDescription -> LocalBuildInfo -> IO ()
-genDependencyInfo pkg info = do
+genDependencyInfo :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()
+genDependencyInfo verbosity pkg info = do
   let
     (PackageName pname) = pkgName . package $ pkg
     name = "DependencyInfo_" ++ (map (\c -> if c == '-' then '_' else c) pname)
@@ -76,6 +76,8 @@ genDependencyInfo pkg info = do
        n ++ "-" ++ v
     deps = fmap (render . sourcePackageId) . allPackages $ installedPkgs info
     strs = flip fmap deps $ \d -> "\"" ++ d ++ "\""
+
+  createDirectoryIfMissingVerbose verbosity True (autogenModulesDir info)
 
   rewriteFile targetHs $ unlines [
       "module " ++ name ++ " where"
