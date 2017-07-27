@@ -43,7 +43,7 @@ main =
 genBuildInfo :: Verbosity -> PackageDescription -> IO ()
 genBuildInfo verbosity pkg = do
   createDirectoryIfMissingVerbose verbosity True "gen"
-  let (PackageName pname) = pkgName . package $ pkg
+  let pname = unPackageName . pkgName . package $ pkg
       version = pkgVersion . package $ pkg
       name = "BuildInfo_" ++ (map (\c -> if c == '-' then '_' else c) pname)
       targetHs = "gen/" ++ name ++ ".hs"
@@ -66,7 +66,7 @@ genBuildInfo verbosity pkg = do
 genDependencyInfo :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()
 genDependencyInfo verbosity pkg info = do
   let
-    (PackageName pname) = pkgName . package $ pkg
+    pname = unPackageName . pkgName . package $ pkg
     name = "DependencyInfo_" ++ (map (\c -> if c == '-' then '_' else c) pname)
     targetHs = autogenModulesDir info ++ "/" ++ name ++ ".hs"
     render p =
